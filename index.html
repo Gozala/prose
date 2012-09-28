@@ -2,13 +2,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="author" content="Irakli Gozalishvili">
-    <link rel=stylesheet href=../CodeMirror/lib/codemirror.css>
-    <link rel=stylesheet href=../CodeMirror/theme/ambiance.css>
-    <script src=../CodeMirror/lib/codemirror.js></script>
-    <script src=../CodeMirror/mode/markdown/markdown.js></script>
-    <script src=../CodeMirror/mode/javascript/javascript.js></script>
-    <script src=../CodeMirror/mode/clojure/clojure.js></script>
-    <script src=../CodeMirror/mode/coffeescript/coffeescript.js></script>
+    <link rel=stylesheet href=./support/code-mirror/lib/codemirror.css>
+    <link rel=stylesheet href=./support/code-mirror/theme/ambiance.css>
+    <script src=./support/code-mirror/lib/codemirror.js></script>
+    <script src=./support/code-mirror/mode/markdown/markdown.js></script>
+    <script src=./support/code-mirror/mode/javascript/javascript.js></script>
+    <script src=./support/code-mirror/mode/clojure/clojure.js></script>
+    <script src=./support/code-mirror/mode/coffeescript/coffeescript.js></script>
     <script src=./plugins/code-mirror/prose.js></script>
     <style>
       html, body {
@@ -32,43 +32,160 @@
   </head>
   <body class=ambiance>
 <textarea id="input" name="input">
-# Core
+# Prose
 
-Since core module of prose is mainly designed to work with process pipes
-it makes use of nodejs's core modules:
+Prose is an experimental take on [Literate_programming][] inspired by
+[Literate coffeescript][]. It attempts to focus embrace problem solving,
+without binding you to any specific programing language.
+
+-------------------------------------------- 
+
+Prose uses [markdown][] as a primary format for describing problems and
+solutions for the particular problem that program is trying to solve.
+
+Actual solutions to the problem are embedded as code blocks, written in
+any [programing language that can compile to javascript](http://altjs.org/).
+
+
+
+### Embedding code
+
+
+
+Prose treats any markdown [code block][] as an embedded program. Code can
+be written in any language as long as it can compile to JS and of course
+JS :) Standard [shebang][] trick can be used to identify language the code
+is written in. 
+
+In order to demonstrate prose we will use it to write itself *(yeah we're
+that meta!!)*. Since primary input format is markdown, we use a full
+featured markdown parser library [marked][]:
+
 
     #!/usr/bin/env javascript
-    var Module = require("module").Module;
-    var path = require("path");
+    var marked = require("marked")
 
-In order to handle [markdown][] a full featured markdown parser written in JS
-[marked][] is used.
 
-    var marked = require("marked");
+In order to transpile prose into program we will need to parse a given
+markdown input. Library provides convenient function for that
 
-Only thing this module does is takes input from the process standard input
-an writes compiled version to the standard output.
+
+
+    function transpile(input) {
+      return marked.lexer(input).
+
+
+> Prose will recognizes code block above as a javascript. If shebang
+> is not provided code block is treated as a previous one.
+
+
+To assemble an executable we will only need to combine text from the code
+blocks
+
+
+       filter(function(block) {
+          return block.type === "code"
+        }).map(function(block) {
+          return block.text
+        }).join("\n\n")
+    }
+
+
+Prose is designed in an idiomatic Unix style, in a sense that it takes
+program input from the standard input and writes compiled program into
+standard output.
+
+
+    #!/usr/bin/env coffeescript
+    compile = (input, output) ->
+
+
+All the data from the standard input is aggregated before running through a
+transpiler since individual data chunks may not represent valid / parseable
+data.
+
+
+      source = ""
+      input.on("data", (chunck) -> source = source.concat(chunck))
+
+
+Once all data from the input has being read, we attempt to tranpile it
+and write it to standard output.
+
+
+      input.once("end", ->
+        try
+          output.write(transpile(source))
+        catch error
+          exit(error))
+
+
+If anything goes wrong during reading / writing or transpilation we
+**exit** a program.
+
+
+      input.once("error", exit)
+      output.once("error", exit)
+
+
+Although we don't just exit, if we run into error we report it and exit
+with exit code `1`. If there are no errors we still exit, but with exit
+code `0`.
+
 
     #!/usr/bin/env clojure
-    (defn main
-      []
-      (if (< (count process.argv) 3)
-        (do
-          (.resume process.stdin)
-          (.set-encoding process.stdin)
-          (compile process.stdin process.stdout (.cwd process)))
+    (defn exit [error]
+      (if (nil? error)
+        (.exit process 0)
+        (do (.log console error)
+            (.exit process 1))))
+
+
+Also main task is wrapped in a function that opens standard input and
+passes both input and output to the compiler to do the job.
+
+
+    (defn main []
+      (if (< process.argv.length 3)
+        (do (.resume process.stdin)
+            (.set-encoding :utf-8 process.stdin)
+            (compile process.stdin process.stdout))
         (._load Module (.resolve path (get process.argv 2)) nil true)))
 
 
-If module is executed as a program, it automatically invokes it's `main`
-function:
+If code is executed as a program (in which case it will it's going to be
+a main module)
 
-    #!/usr/bin/env coffeescript
-    main() if require.main is module
 
+    (if (identical? require.main module)
+
+
+Program performs it's primary task by executing `main` function.
+
+
+      (main))
+
+
+Also we will be exporting main function such that it could be called from
+the other programs:
+
+
+    #!/usr/bin/env javascript
+    module.exports = main
+
+
+----------------------------------------- 
+
+> While editor mode recognizes languages that can compile to JS, prose compiler
+> does not, but support for that is coming soon!
 
 [markdown]:http://daringfireball.net/projects/markdown
 [marked]:https://github.com/chjj/marked
+[Literate_programming]:http://en.wikipedia.org/wiki/Literate_programming
+[Literate coffeescript]:https://gist.github.com/3790135
+[code block]:http://daringfireball.net/projects/markdown/syntax#precode
+[shebang]:http://en.wikipedia.org/wiki/Shebang_%28Unix%29 
+
 </textarea>
     <div id=gcli-display></div>
     <input id=gcli-input class=gcli-input type=text autofocus/>
