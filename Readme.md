@@ -5,6 +5,7 @@ Prose is an experimental take on [Literate_programming][] inspired by
 without binding you to any specific programing language.
 
 -------------------------------------------- 
+
 Prose uses [markdown][] as a primary format for describing problems and
 solutions for the particular problem that program is trying to solve.
 
@@ -55,44 +56,42 @@ blocks
         }).join("\n\n")
     }
 
+
 Prose is designed in an idiomatic Unix style, in a sense that it takes
 program input from the standard input and writes compiled program into
 standard output.
 
 
-    function compile(input, output) {
+    #!/usr/bin/env coffeescript
+    compile = (input, output) ->
 
 
 All the data from the standard input is aggregated before running through a
 transpiler since individual data chunks may not represent valid / parseable
 data.
 
-     var source = "";
-      input.on("data", function onChunck(chunck) {
-        source = source.concat(chunck)
-      });
+
+      source = ""
+      input.on("data", (chunck) -> source = source.concat(chunck))
 
 
 Once all data from the input has being read, we attempt to tranpile it
 and write it to standard output.
 
 
-     input.once("end", function onRead() {
-        try {
+      input.once("end", ->
+        try
           output.write(transpile(source))
-        } catch (error) {
-          exit(error)
-        }
-      })
+        catch error
+          exit(error))
 
 
 If anything goes wrong during reading / writing or transpilation we
 **exit** a program.
 
 
-     input.on("error", exit)
-      output.on("error", exit)
-    }
+      input.once("error", exit)
+      output.once("error", exit)
 
 
 Although we don't just exit, if we run into error we report it and exit
@@ -100,51 +99,51 @@ with exit code `1`. If there are no errors we still exit, but with exit
 code `0`.
 
 
-    function exit(error) {
-      if (error) {
-        console.error(error)
-        process.exit(1)
-      } else {
-        process.exit(0)
-      }
-    }
+    #!/usr/bin/env clojure
+    (defn exit [error]
+      (if (nil? error)
+        (.exit process 0)
+        (do (.log console error)
+            (.exit process 1))))
 
 
 Also main task is wrapped in a function that opens standard input and
 passes both input and output to the compiler to do the job.
 
 
-    function main() {
-      if (process.argv.length < 3) {
-        process.stdin.resume()
-        process.stdin.setEncoding("utf8")
-        compile(process.stdin, process.stdout)
-      } else {
-        Module._load(path.resolve(process.argv[2]), null, true);
-      }
-    }
+    (defn main []
+      (if (< process.argv.length 3)
+        (do (.resume process.stdin)
+            (.set-encoding :utf-8 process.stdin)
+            (compile process.stdin process.stdout))
+        (._load Module (.resolve path (get process.argv 2)) nil true)))
 
 
 If code is executed as a program (in which case it will it's going to be
 a main module)
 
 
-    if (require.main === module)
+    (if (identical? require.main module)
 
 
 Program performs it's primary task by executing `main` function.
 
 
-      main()
+      (main))
 
 
 Also we will be exporting main function such that it could be called from
 the other programs:
 
+
+    #!/usr/bin/env javascript
     module.exports = main
 
-That's all this program does so far. As you have noticed it does not yet
-recognizes non JS languages, but support for that is coming soon!
+
+----------------------------------------- 
+
+> While editor mode recognizes languages that can compile to JS, prose compiler
+> does not, but support for that is coming soon!
 
 [markdown]:http://daringfireball.net/projects/markdown
 [marked]:https://github.com/chjj/marked
