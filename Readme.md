@@ -49,9 +49,9 @@ blocks
 
 
        filter(function(block) {
-          return node.type === "code"
-        }).map(function(node) {
-          return node.text
+          return block.type === "code"
+        }).map(function(block) {
+          return block.text
         }).join("\n\n")
     }
 
@@ -137,6 +137,11 @@ Program performs it's primary task by executing `main` function.
 
       main()
 
+
+Also we will be exporting main function such that it could be called from
+the other programs:
+
+    module.exports = main
 
 That's all this program does so far. As you have noticed it does not yet
 recognizes non JS languages, but support for that is coming soon!
