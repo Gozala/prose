@@ -3,7 +3,7 @@
   "id": "prose",
   "version": "0.0.1",
   "description": "Extendable literate programming",
-  "keywords": [ "prose" ],
+  "keywords": [ "prose", "Literate programming" ],
   "author": "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)",
   "homepage": "https://github.com/Gozala/prose",
   "repository": {
@@ -23,9 +23,10 @@
     "marked": "0.2.5"
   },
   "bin": {
-    "prose": "./core.js"
+    "prose": "./bin/prose.js"
   },
   "scripts": {
+    "prepublish": "make",
     "test": "node tests/test-all.js",
     "repl": "node node_modules/repl-utils"
   },
