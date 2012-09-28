@@ -1,0 +1,36 @@
+{
+  "name": "prose",
+  "id": "prose",
+  "version": "0.0.1",
+  "description": "Extendable literate programming",
+  "keywords": [ "prose" ],
+  "author": "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)",
+  "homepage": "https://github.com/Gozala/prose",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gozala/prose.git",
+    "web": "https://github.com/Gozala/prose"
+  },
+  "bugs": {
+    "url": "http://github.com/Gozala/prose/issues/"
+  },
+  "devDependencies": {
+    "test": ">=0.4.4",
+    "repl-utils": ">=1.0.0",
+    "swank-js": ">=0.0.1"
+  },
+  "dependencies": {
+    "marked": "0.2.5"
+  },
+  "bin": {
+    "prose": "./core.js"
+  },
+  "scripts": {
+    "test": "node tests/test-all.js",
+    "repl": "node node_modules/repl-utils"
+  },
+  "licenses": [{
+    "type" : "MIT",
+    "url" : "https://github.com/Gozala/prose/License.md"
+  }]
+}
